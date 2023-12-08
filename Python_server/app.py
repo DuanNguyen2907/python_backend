@@ -68,7 +68,7 @@ def predict_disease():
     # Prepare Test Data
     df_test = pd.DataFrame(columns=list(symptoms.keys()))
     df_test.loc[0] = np.array(list(symptoms.values()))
-    clf = load(str("./saved_model/mnb.joblib"))
+    clf = load(str("./saved_model/gradient_boost.joblib"))
     result = clf.predict(df_test)
     response = {'message': 'Bạn đã bị', 'disease': result[0]}
     return jsonify(response), 201
