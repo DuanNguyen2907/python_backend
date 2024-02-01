@@ -78,12 +78,12 @@ class DiseasePrediction:
         # Exclude non-numeric columns
         numeric_columns = data_frame.select_dtypes(include=['number']).columns
         numeric_data = data_frame[numeric_columns]
-
+        print("data_frame:",data_frame)
         # Get Feature Correlation for numeric data
         corr = numeric_data.corr()
 
         # Plot heatmap
-        sn.heatmap(corr, square=True, annot=False, cmap="YlGnBu")
+        sn.heatmap(corr, square=True, annot=True, cmap="YlGnBu")
         plt.title("Feature Correlation")
         plt.tight_layout()
         if show_fig:
@@ -102,14 +102,15 @@ class DiseasePrediction:
         return X_train, y_train, X_val, y_val
 
     # Model Selection
-    def select_model(self):
-        if self.model_name == 'mnb':
-            self.clf = MultinomialNB()
-        elif self.model_name == 'decision_tree':
-            self.clf = DecisionTreeClassifier(criterion=self.config['model']['decision_tree']['criterion'])
-        elif self.model_name == 'random_forest':
-            self.clf = RandomForestClassifier(n_estimators=self.config['model']['random_forest']['n_estimators'])
-        elif self.model_name == 'gradient_boost':
+    def select_model(self): 
+        # if self.model_name == 'mnb':
+        #     self.clf = MultinomialNB()
+        # elif self.model_name == 'decision_tree':
+        #     self.clf = DecisionTreeClassifier(criterion=self.config['model']['decision_tree']['criterion'])
+        # elif self.model_name == 'random_forest':
+        #     self.clf = RandomForestClassifier(n_estimators=self.config['model']['random_forest']['n_estimators'])
+        # elif self.model_name == 'gradient_boost':
+        if self.model_name == 'gradient_boost':
             self.clf = GradientBoostingClassifier(n_estimators=self.config['model']['gradient_boost']['n_estimators'],
                                                   criterion=self.config['model']['gradient_boost']['criterion'])
         return self.clf

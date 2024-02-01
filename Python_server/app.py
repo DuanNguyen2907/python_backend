@@ -1,37 +1,25 @@
 from flask import Flask, jsonify, request
 import pandas as pd
 import numpy as np
+from flask_cors import CORS
 from joblib import load
+import psycopg2
+import json
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Một danh sách đơn giản để làm ví dụ
-data = [
-    {'id': 1, 'name': 'Item 1'},
-    {'id': 2, 'name': 'Item 2'},
-    {'id': 3, 'name': 'Item 3'},
-]
 
-# Route để lấy danh sách item
-@app.route('/api/items', methods=['GET'])
-def get_items():
-    return jsonify({'data': data})
+DATABASE_URL = "postgresql://itssuser:password@localhost:5432/chatbot"
 
-# Route để lấy thông tin của một item dựa trên ID
-@app.route('/api/items/<int:item_id>', methods=['GET'])
-def get_item(item_id):
-    item = next((item for item in data if item['id'] == item_id), None)
-    if item is not None:
-        return jsonify({'data': item})
-    else:
-        return jsonify({'message': 'Item not found'}), 404
+def connect_to_db():
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
+    except Exception as e:
+        print("Kết nối đến database thất bại:", e)
+        return None
 
-# Route để thêm một item mới
-@app.route('/api/items', methods=['POST'])
-def add_item():
-    new_item = {'id': len(data) + 1, 'name': request.json.get('name', '')}
-    data.append(new_item)
-    return jsonify({'message': 'Item added successfully', 'data': new_item}), 201
 
 @app.route('/api/predictions',methods=['POST'])
 def predict_disease():
@@ -70,8 +58,25 @@ def predict_disease():
     df_test.loc[0] = np.array(list(symptoms.values()))
     clf = load(str("./saved_model/gradient_boost.joblib"))
     result = clf.predict(df_test)
-    response = {'message': 'Bạn đã bị', 'disease': result[0]}
-    return jsonify(response), 201
+    predicted_disease = result[0]
+    connection = connect_to_db()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM diseases WHERE disease_name = %s", (predicted_disease,))
+    disease_data = cursor.fetchone()
+    connection.close()
+    
+    if disease_data:
+        disease_data_dict = {
+            'disease_id': disease_data[0],
+            'disease_name': disease_data[1],
+            'disease_desc': disease_data[2],
+            'disease_advice': disease_data[3],
+        }
+        disease_data_json = json.dumps(disease_data_dict)
+    else:
+        print("No disease data found for the predicted disease.")
+
+    return jsonify(disease_data_dict), 201
 
 
 if __name__ == '__main__':
