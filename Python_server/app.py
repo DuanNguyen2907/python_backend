@@ -71,12 +71,15 @@ def predict_disease():
             'disease_name': disease_data[1],
             'disease_desc': disease_data[2],
             'disease_advice': disease_data[3],
+            'vietnamese_name': disease_data[4],
+            'vietnamese_desc': disease_data[5],
+            'vietnamese_advice': disease_data[6],
         }
-        disease_data_json = json.dumps(disease_data_dict)
+        print("1")
+        return jsonify(disease_data_dict), 201
     else:
-        print("No disease data found for the predicted disease.")
+        return jsonify({"error": "No disease data found for the predicted disease."}), 404
 
-    return jsonify(disease_data_dict), 201
 
 
 if __name__ == '__main__':
